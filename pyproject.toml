@@ -10,7 +10,7 @@ readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.11"
 authors = [
-  { name = "thetan" }
+  { name = "dueude666" }
 ]
 keywords = ["arxiv", "obsidian", "paper-reading", "research", "summarization", "typer"]
 classifiers = [
@@ -35,6 +35,11 @@ dependencies = [
   "PyYAML>=6.0.2",
   "typer>=0.16.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/dueude666/paper-digest-obsidian"
+Repository = "https://github.com/dueude666/paper-digest-obsidian"
+Issues = "https://github.com/dueude666/paper-digest-obsidian/issues"
 
 [project.optional-dependencies]
 dev = [
