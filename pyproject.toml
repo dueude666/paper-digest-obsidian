@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "paper-digest-obsidian"
-version = "0.1.1"
+version = "0.1.2"
 description = "Local paper summarization workflow for Codex and Obsidian."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -59,6 +59,7 @@ start-my-day = "paper_digest.cli.app:run_recommend_daily"
 search-notes = "paper_digest.cli.app:run_search_notes"
 extract-images = "paper_digest.cli.app:run_extract_images"
 view-paper = "paper_digest.cli.app:run_view_paper"
+view-paper-note = "paper_digest.cli.app:run_view_paper_note"
 
 [tool.black]
 line-length = 100

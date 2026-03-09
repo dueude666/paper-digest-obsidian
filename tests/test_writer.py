@@ -144,3 +144,23 @@ def test_writer_outputs_full_paper_note_and_syncs_pdf(tmp_path: Path) -> None:
         / f"{writer.paper_slug_from_metadata(parsed_paper.metadata)}.pdf"
     )
     assert synced_pdf.exists()
+
+
+def test_writer_outputs_source_pdf_for_direct_reading(tmp_path: Path) -> None:
+    settings = AppSettings(obsidian_vault_path=tmp_path)
+    writer = ObsidianWriter(settings=settings)
+    metadata = build_summary().metadata
+    pdf_source = tmp_path / "source-direct.pdf"
+    pdf_source.write_bytes(b"%PDF-1.4 direct pdf")
+
+    result = writer.write_source_pdf(
+        metadata=metadata,
+        topic="检索增强生成",
+        pdf_source_path=pdf_source,
+        dry_run=False,
+    )
+
+    assert result.written is True
+    assert result.path.exists()
+    assert result.relative_path.endswith(".pdf")
+    assert "原文PDF" in result.relative_path

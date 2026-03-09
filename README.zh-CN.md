@@ -20,7 +20,8 @@
 - 提取论文图片到 Obsidian 资源目录
 - 生成每日推荐
 - 扫描并链接已有 Obsidian 笔记
-- 生成“全文查看”笔记，把 PDF 和解析出的正文一起写进 vault
+- 同步原始 PDF 到 vault，直接在 Obsidian 里读原文
+- 可选生成“全文查看”笔记，把 PDF 和解析出的正文一起写进 vault
 
 ## 安装
 
@@ -53,6 +54,7 @@ OBSIDIAN_VAULT_PATH=F:/你的Obsidian仓库
 LITERATURE_DIR_NAME=文献库
 PAPERS_DIR_NAME=论文笔记
 FULL_TEXT_DIR_NAME=论文全文
+PDF_DIR_NAME=原文PDF
 ASSETS_DIR_NAME=图片素材
 SUMMARY_BACKEND=heuristic
 SUMMARY_AUDIENCE=beginner
@@ -87,10 +89,24 @@ SUMMARY_DETAIL_LEVEL=detailed
 .\.venv\Scripts\summarize-topic.exe "retrieval augmented generation" --limit 10 --topic rag
 ```
 
-### 3. 查看完整论文
+### 3. 直接阅读完整论文原文
 
 ```powershell
 .\.venv\Scripts\view-paper.exe "https://arxiv.org/abs/1706.03762" --topic transformer
+```
+
+这个命令不会生成笔记，而是直接把原始 PDF 同步到：
+
+```text
+文献库/<topic>/原文PDF/<paper-slug>.pdf
+```
+
+你在 Obsidian 左侧文件树里直接点开这个 PDF，就是真正的原论文阅读。
+
+### 4. 生成辅助用的全文查看笔记
+
+```powershell
+.\.venv\Scripts\view-paper-note.exe "https://arxiv.org/abs/1706.03762" --topic transformer
 ```
 
 这个命令会做三件事：
@@ -108,19 +124,19 @@ SUMMARY_DETAIL_LEVEL=detailed
 
 如果 PDF 解析不完整，全文笔记里会明确保留警告，并仍然提供 PDF 原文入口。
 
-### 4. 提取图片
+### 5. 提取图片
 
 ```powershell
 .\.venv\Scripts\extract-images.exe "https://arxiv.org/abs/1706.03762" --topic transformer
 ```
 
-### 5. 每日推荐
+### 6. 每日推荐
 
 ```powershell
 .\.venv\Scripts\recommend-daily.exe --top-n 10 --analyze-top-n 3
 ```
 
-### 6. 搜索已有笔记
+### 7. 搜索已有笔记
 
 ```powershell
 .\.venv\Scripts\search-notes.exe "vector database"
@@ -137,6 +153,8 @@ SUMMARY_DETAIL_LEVEL=detailed
       index.md
       论文笔记/
         <paper-slug>.md
+      原文PDF/
+        <paper-slug>.pdf
       论文全文/
         <paper-slug>.md
       图片素材/
@@ -148,6 +166,7 @@ SUMMARY_DETAIL_LEVEL=detailed
 说明：
 
 - `论文笔记/`：适合快速理解的摘要版笔记
+- `原文PDF/`：适合直接阅读完整原论文
 - `论文全文/`：适合完整阅读和查原文的全文版笔记
 - `图片素材/`：PDF 副本和抽取的图片资源
 

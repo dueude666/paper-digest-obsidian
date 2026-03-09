@@ -316,6 +316,46 @@ def view_paper_command(
     url_or_id: Annotated[str | None, typer.Argument(help="arXiv URL or arXiv identifier.")] = None,
     title: Annotated[str | None, typer.Option("--title", help="Paper title to search.")] = None,
     topic: Annotated[
+        str | None, typer.Option("--topic", help="Topic folder for the synced source PDF.")
+    ] = None,
+    vault: Annotated[Path | None, typer.Option("--vault", help="Obsidian vault path.")] = None,
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="Generate output without writing files.")
+    ] = False,
+    force: Annotated[
+        bool, typer.Option("--force", help="Refresh cache and re-download artifacts.")
+    ] = False,
+    overwrite: Annotated[
+        str | None,
+        typer.Option("--overwrite", help="Conflict strategy: overwrite, skip, suffix."),
+    ] = None,
+    verbose: Annotated[bool, typer.Option("--verbose", help="Enable debug logging.")] = False,
+) -> None:
+    if bool(url_or_id) == bool(title):
+        raise typer.BadParameter("Provide either a URL/arXiv id argument or --title.")
+
+    runtime = build_runtime(verbose=verbose)
+    try:
+        metadata, result = runtime.workflow.export_source_pdf(
+            url_or_id=url_or_id,
+            title=title,
+            topic=topic,
+            dry_run=dry_run,
+            force=force,
+            overwrite_strategy=overwrite,
+            vault_override=vault,
+        )
+        typer.echo(result.relative_path)
+        typer.echo(metadata.title)
+    finally:
+        runtime.close()
+
+
+@app.command("view-paper-note")
+def view_paper_note_command(
+    url_or_id: Annotated[str | None, typer.Argument(help="arXiv URL or arXiv identifier.")] = None,
+    title: Annotated[str | None, typer.Option("--title", help="Paper title to search.")] = None,
+    topic: Annotated[
         str | None, typer.Option("--topic", help="Topic folder for the full-paper note.")
     ] = None,
     vault: Annotated[Path | None, typer.Option("--vault", help="Obsidian vault path.")] = None,
@@ -626,3 +666,7 @@ def run_extract_images() -> None:
 
 def run_view_paper() -> None:
     typer.run(view_paper_command)
+
+
+def run_view_paper_note() -> None:
+    typer.run(view_paper_note_command)

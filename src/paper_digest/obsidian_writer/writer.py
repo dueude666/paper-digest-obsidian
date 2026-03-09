@@ -235,6 +235,42 @@ class ObsidianWriter:
             skipped=skipped,
         )
 
+    def write_source_pdf(
+        self,
+        *,
+        metadata: PaperMetadata,
+        topic: str,
+        pdf_source_path: Path,
+        vault_override: Path | None = None,
+        dry_run: bool = False,
+        overwrite_strategy: str | None = None,
+    ) -> WriteResult:
+        topic_slug = self.topic_slug(topic)
+        paper_slug = self.paper_slug_from_metadata(metadata)
+        topic_root = self._topic_root(
+            topic_slug=topic_slug, vault_override=vault_override, dry_run=dry_run
+        )
+        output_path = topic_root / self._settings.pdf_dir_name / f"{paper_slug}.pdf"
+        resolved_path, skipped = self._resolve_output_path(
+            output_path,
+            overwrite_strategy or self._settings.overwrite_strategy,
+        )
+        relative_path = self._relative_path(
+            resolved_path, vault_override=vault_override, dry_run=dry_run
+        )
+
+        if not dry_run and not skipped:
+            ensure_directory(resolved_path.parent)
+            shutil.copy2(pdf_source_path, resolved_path)
+
+        return WriteResult(
+            path=resolved_path,
+            relative_path=relative_path,
+            content="",
+            written=not dry_run and not skipped,
+            skipped=skipped,
+        )
+
     def build_full_view(
         self,
         *,

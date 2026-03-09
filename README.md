@@ -18,7 +18,8 @@ The project keeps the useful parts of the `evil-read-arxiv` workflow, but rewrit
 
 - summarize a single arXiv paper from URL or title
 - summarize a topic with top-N paper notes plus an index page
-- export a full-paper reading note with the original PDF embedded in Obsidian
+- sync the original PDF into your vault for direct reading in Obsidian
+- optionally export a full-paper extracted note with the original PDF embedded
 - extract paper images into Obsidian assets folders
 - build daily recommendation digests from a research profile
 - scan and link existing Obsidian notes
@@ -116,10 +117,22 @@ SUMMARY_DETAIL_LEVEL=detailed
 .\.venv\Scripts\summarize-topic.exe "autonomous driving detr" --limit 10 --topic 自动驾驶detr
 ```
 
-### Export a full-paper reading note
+### Read the original paper PDF in Obsidian
 
 ```powershell
 .\.venv\Scripts\view-paper.exe "https://arxiv.org/abs/1706.03762" --topic transformer
+```
+
+This command syncs the raw PDF into:
+
+```text
+<vault>/文献库/<topic>/原文PDF/<paper-slug>.pdf
+```
+
+### Export an extracted full-paper note
+
+```powershell
+.\.venv\Scripts\view-paper-note.exe "https://arxiv.org/abs/1706.03762" --topic transformer
 ```
 
 ### Rebuild topic indexes
@@ -157,6 +170,8 @@ By default, notes are written into Chinese-named Obsidian folders:
       index.md
       论文笔记/
         <paper-slug>.md
+      原文PDF/
+        <paper-slug>.pdf
       论文全文/
         <paper-slug>.md
       图片素材/
@@ -189,6 +204,8 @@ The full-paper note includes:
 - extracted abstract
 - extracted sections when parsing succeeds
 - references excerpt and parser warnings when available
+
+If you only want the original paper itself, use `view-paper`. If you want the extracted full-text helper note, use `view-paper-note`.
 
 The default output style is optimized for readers who want:
 

@@ -194,6 +194,29 @@ class PaperWorkflowService:
         )
         return full_view, result
 
+    def export_source_pdf(
+        self,
+        *,
+        url_or_id: str | None = None,
+        title: str | None = None,
+        topic: str | None = None,
+        dry_run: bool = False,
+        force: bool = False,
+        overwrite_strategy: str | None = None,
+        vault_override: Path | None = None,
+    ) -> tuple[PaperMetadata, WriteResult]:
+        metadata = self._resolve_single_metadata(url_or_id=url_or_id, title=title, force=force)
+        pdf_path = self._fetcher.download_pdf(metadata=metadata, force=force)
+        result = self._writer.write_source_pdf(
+            metadata=metadata,
+            topic=topic or self._settings.default_topic,
+            pdf_source_path=pdf_path,
+            vault_override=vault_override,
+            dry_run=dry_run,
+            overwrite_strategy=overwrite_strategy,
+        )
+        return metadata, result
+
     def resolve_single_metadata(
         self,
         *,
