@@ -1,0 +1,36 @@
+{{ frontmatter }}
+
+# {{ digest.date }} 论文推荐
+
+## 概览
+{{ digest.overview }}
+
+## 选择逻辑
+{{ digest.selection_rationale }}
+
+## 推荐列表
+{% for paper in recommended_papers %}
+### {{ loop.index }}. {{ paper.link }}
+- 研究方向：{{ paper.domain }}
+- 来源：{{ paper.source_kind }}
+- 综合评分：{{ paper.score }}
+- 命中关键词：{{ paper.matched_keywords }}
+- 状态：{{ paper.status }}
+{% if paper.existing_note_links %}
+- 已有笔记：
+{% for link in paper.existing_note_links %}
+  - {{ link }}
+{% endfor %}
+{% endif %}
+{% for line in paper.overview %}
+- {{ line }}
+{% endfor %}
+
+{% endfor %}
+
+{% if recommended_papers | selectattr("status", "equalto", "新生成") | list %}
+## 已自动生成详细笔记
+{% for paper in recommended_papers if paper.status == "新生成" and "[[" in paper.link %}
+- {{ paper.link }}
+{% endfor %}
+{% endif %}

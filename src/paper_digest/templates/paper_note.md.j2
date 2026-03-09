@@ -1,0 +1,110 @@
+{{ frontmatter }}
+
+# {{ summary.metadata.title }}
+
+> [!summary] 一句话总结
+> {{ summary.one_sentence }}
+
+> [!tip] 小白先看这 5 行
+> - 主题入口：[[{{ topic_index_target }}|{{ topic_name }} 专题索引]]
+> - 论文定位：{{ role_display }}{{ (" / " ~ summary.method_category) if summary.method_category and summary.method_category != role_display else "" }}
+> - 用了什么模型：{{ summary.core_method }}
+> - 做了什么：{{ summary.research_problem }}
+> - 用了什么数据集：{{ summary.datasets_or_benchmarks }}
+> - 结果如何：{{ summary.main_results }}
+
+## 先讲人话
+{% for item in summary.short_overview %}
+- {{ item }}
+{% endfor %}
+
+## 阅读导航
+- 主题入口：[[{{ topic_index_target }}|{{ topic_name }} 专题索引]]
+- 总结依据：{{ summary.summary_basis }}
+- 重点基准：{{ summary.datasets_or_benchmarks }}
+
+## 研究背景与问题
+{{ summary.research_context }}
+
+### 这篇论文到底想解决什么
+{{ summary.research_problem }}
+
+### 原文依据
+> {{ summary.problem_evidence }}
+
+## 核心方法解读
+{{ summary.core_method }}
+
+### 方法拆解
+{% for item in summary.method_breakdown %}
+- {{ item }}
+{% endfor %}
+
+### 原文依据
+> {{ summary.method_evidence }}
+
+## 实验设置
+{% for item in summary.experiment_setup %}
+- {{ item }}
+{% endfor %}
+
+## 主要结果
+{{ summary.main_results }}
+
+### 关键结论
+{% for item in summary.key_findings %}
+- {{ item }}
+{% endfor %}
+
+### 原文依据
+> {{ summary.results_evidence }}
+
+## 贡献点
+{% for item in summary.contributions %}
+- {{ item }}
+{% endfor %}
+
+## 重点图示与看图建议
+{% for item in summary.figure_reading_tips %}
+- {{ item }}
+{% endfor %}
+
+{% if image_assets %}
+{% for asset in image_assets %}
+### 图 {{ loop.index }}：{{ asset.filename }}
+![]({{ asset.embed }})
+- 来源：{{ asset.source }}
+{% endfor %}
+{% else %}
+- 当前没有提取到论文图片。建议手动对照 PDF 中的方法总图、主结果表和消融实验图。
+{% endif %}
+
+## 局限性
+{% for item in summary.limitations %}
+- {{ item }}
+{% endfor %}
+
+## 适用场景
+{% for item in summary.use_cases %}
+- {{ item }}
+{% endfor %}
+
+## 建议阅读顺序
+{% for item in summary.reading_path %}
+- {{ item }}
+{% endfor %}
+
+## 我的后续阅读建议
+{% for item in summary.follow_up_advice %}
+- {{ item }}
+{% endfor %}
+
+## 引用信息
+{{ summary.citation }}
+
+{% if summary.warnings %}
+## 提取备注
+{% for warning in summary.warnings %}
+- {{ warning }}
+{% endfor %}
+{% endif %}

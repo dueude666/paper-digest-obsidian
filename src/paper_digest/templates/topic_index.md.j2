@@ -1,0 +1,40 @@
+{{ frontmatter }}
+
+# {{ topic_summary.topic }} 专题索引
+
+## 专题概览
+{{ topic_summary.overview }}
+
+## 检索条件
+- 主题名称：{{ topic_summary.topic }}
+- 检索条件：{{ topic_summary.query }}
+- 论文数量：{{ topic_summary.papers | length }}
+
+## 为什么选这几篇
+{{ topic_summary.selection_rationale }}
+
+{{ topic_summary.why_these_papers }}
+
+## 建议阅读路线
+{% for item in topic_summary.reading_order %}
+- {{ item }}
+{% endfor %}
+
+## 入选论文
+{% for note in notes %}
+### {{ note.wikilink }}
+- 论文定位：{{ note.paper_role }}
+- 方法类别：{{ note.method_category }}
+- 主要基准：{{ note.datasets_or_benchmarks }}
+{% for line in note.short_overview %}
+- {{ line }}
+{% endfor %}
+
+{% endfor %}
+
+## 横向对比
+| 论文 | 问题定义 | 方法类别 | 数据集 / 基准 | 优势 | 局限 |
+| --- | --- | --- | --- | --- | --- |
+{% for row in comparison_rows %}
+| {{ row.wikilink }} | {{ row.problem_definition }} | {{ row.method_category }} | {{ row.datasets_or_benchmarks }} | {{ row.strengths }} | {{ row.limitations }} |
+{% endfor %}

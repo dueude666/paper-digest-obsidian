@@ -1,0 +1,41 @@
+research_domains:
+  retrieval_augmented_generation:
+    keywords:
+      - rag
+      - retrieval augmented generation
+      - knowledge intensive nlp
+      - long context retrieval
+    arxiv_categories:
+      - cs.CL
+      - cs.IR
+      - cs.LG
+    priority: 3
+
+  autonomous_driving:
+    keywords:
+      - autonomous driving
+      - end to end driving
+      - driving policy
+      - trajectory planning
+      - multimodal driving
+    arxiv_categories:
+      - cs.RO
+      - cs.CV
+      - cs.AI
+    priority: 2
+
+  multimodal_reasoning:
+    keywords:
+      - vision language model
+      - multimodal reasoning
+      - image text model
+      - world model
+    arxiv_categories:
+      - cs.CV
+      - cs.CL
+      - cs.LG
+    priority: 2
+
+excluded_keywords:
+  - survey
+  - benchmark only
