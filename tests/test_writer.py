@@ -1,7 +1,7 @@
 ﻿from pathlib import Path
 
 from paper_digest.config import AppSettings
-from paper_digest.models import PaperMetadata, PaperSummary, TopicSummary
+from paper_digest.models import PaperMetadata, PaperSection, PaperSummary, ParsedPaper, TopicSummary
 from paper_digest.obsidian_writer.writer import ObsidianWriter
 
 
@@ -46,6 +46,21 @@ def build_summary() -> PaperSummary:
         strengths=["结果稳定"],
         weaknesses=["成本增加"],
         paper_role="core method",
+    )
+
+
+def build_parsed_paper() -> ParsedPaper:
+    metadata = build_summary().metadata
+    return ParsedPaper(
+        metadata=metadata,
+        text="Introduction\nThis is the intro.\n\nMethod\nThis is the method section.",
+        abstract_text="This paper studies RAG in detail.",
+        sections=[
+            PaperSection(heading="Introduction", body="This is the intro.", order=0),
+            PaperSection(heading="Method", body="This is the method section.", order=1),
+        ],
+        references_text="[1] Reference entry.",
+        extraction_method="pymupdf",
     )
 
 
@@ -95,3 +110,37 @@ def test_writer_outputs_topic_index(tmp_path: Path) -> None:
     content = result.path.read_text(encoding="utf-8")
     assert "# 检索增强生成 专题索引" in content
     assert "[[论文笔记/" in content
+
+
+def test_writer_outputs_full_paper_note_and_syncs_pdf(tmp_path: Path) -> None:
+    settings = AppSettings(obsidian_vault_path=tmp_path)
+    writer = ObsidianWriter(settings=settings)
+    parsed_paper = build_parsed_paper()
+    pdf_source = tmp_path / "source.pdf"
+    pdf_source.write_bytes(b"%PDF-1.4 test pdf")
+
+    result = writer.write_full_paper(
+        parsed_paper=parsed_paper,
+        topic="检索增强生成",
+        pdf_source_path=pdf_source,
+        dry_run=False,
+    )
+
+    assert result.written is True
+    assert result.path.exists()
+    assert "论文全文" in result.relative_path
+    content = result.path.read_text(encoding="utf-8")
+    assert "# A Strong RAG Paper 全文查看" in content
+    assert "## 原始 PDF" in content
+    assert "![[../图片素材/" in content
+    assert "## 正文提取" in content
+    assert "### Introduction" in content
+    synced_pdf = (
+        tmp_path
+        / "文献库"
+        / "检索增强生成"
+        / "图片素材"
+        / writer.paper_slug_from_metadata(parsed_paper.metadata)
+        / f"{writer.paper_slug_from_metadata(parsed_paper.metadata)}.pdf"
+    )
+    assert synced_pdf.exists()

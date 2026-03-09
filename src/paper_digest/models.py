@@ -107,6 +107,21 @@ class PaperSummary(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+class PaperFullView(BaseModel):
+    """Structured full-paper view for Obsidian."""
+
+    metadata: PaperMetadata
+    parsed_paper: ParsedPaper
+    topic_name: str
+    topic_slug: str
+    paper_slug: str
+    topic_index_target: str
+    summary_note_target: str
+    pdf_asset_relative_path: str | None = None
+    pdf_embed_target: str | None = None
+    generated_at: datetime = Field(default_factory=utc_now)
+
+
 class TopicComparisonRow(BaseModel):
     """Row shown in the topic index comparison table."""
 

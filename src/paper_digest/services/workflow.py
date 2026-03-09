@@ -8,6 +8,7 @@ from pathlib import Path
 from paper_digest.config import AppSettings
 from paper_digest.models import (
     ImageAsset,
+    PaperFullView,
     PaperMetadata,
     PaperSummary,
     ParsedPaper,
@@ -162,6 +163,37 @@ class PaperWorkflowService:
         )
         return summary, note_result
 
+    def export_full_paper(
+        self,
+        *,
+        url_or_id: str | None = None,
+        title: str | None = None,
+        topic: str | None = None,
+        dry_run: bool = False,
+        force: bool = False,
+        overwrite_strategy: str | None = None,
+        vault_override: Path | None = None,
+    ) -> tuple[PaperFullView, WriteResult]:
+        metadata = self._resolve_single_metadata(url_or_id=url_or_id, title=title, force=force)
+        parsed_paper, pdf_path = self._build_parsed_paper(metadata=metadata, force=force)
+        resolved_topic = topic or self._settings.default_topic
+        full_view = self._writer.build_full_view(
+            parsed_paper=parsed_paper,
+            topic=resolved_topic,
+            pdf_source_path=pdf_path,
+            vault_override=vault_override,
+            dry_run=dry_run,
+        )
+        result = self._writer.write_full_paper(
+            parsed_paper=parsed_paper,
+            topic=resolved_topic,
+            pdf_source_path=pdf_path,
+            vault_override=vault_override,
+            dry_run=dry_run,
+            overwrite_strategy=overwrite_strategy,
+        )
+        return full_view, result
+
     def resolve_single_metadata(
         self,
         *,
@@ -178,6 +210,14 @@ class PaperWorkflowService:
         force: bool = False,
     ) -> tuple[PaperSummary, Path | None]:
         return self._build_summary(metadata=metadata, force=force)
+
+    def build_parsed_paper(
+        self,
+        *,
+        metadata: PaperMetadata,
+        force: bool = False,
+    ) -> tuple[ParsedPaper, Path | None]:
+        return self._build_parsed_paper(metadata=metadata, force=force)
 
     def _resolve_single_metadata(
         self,
@@ -205,14 +245,34 @@ class PaperWorkflowService:
     def _build_summary(
         self, *, metadata: PaperMetadata, force: bool
     ) -> tuple[PaperSummary, Path | None]:
+        parsed_paper, pdf_path = self._build_parsed_paper(metadata=metadata, force=force)
+        return self._summarizer.summarize_paper(parsed_paper), pdf_path
+
+    def _build_parsed_paper(
+        self,
+        *,
+        metadata: PaperMetadata,
+        force: bool,
+    ) -> tuple[ParsedPaper, Path | None]:
         parsed_paper = ParsedPaper(metadata=metadata, abstract_text=metadata.abstract, warnings=[])
         pdf_path: Path | None = None
         try:
             pdf_path = self._fetcher.download_pdf(metadata=metadata, force=force)
+        except Exception as error:
+            LOGGER.warning("PDF download failed for %s: %s", metadata.title, error)
+            parsed_paper.warnings.append(f"PDF download fallback: {error}")
+            return parsed_paper, None
+
+        try:
             parsed_paper = self._parser.parse(metadata=metadata, pdf_path=pdf_path, force=force)
         except Exception as error:
             LOGGER.warning(
-                "Falling back to abstract-only summarization for %s: %s", metadata.title, error
+                "Falling back to abstract-only parsing for %s: %s", metadata.title, error
             )
-            parsed_paper.warnings.append(f"PDF parsing fallback: {error}")
-        return self._summarizer.summarize_paper(parsed_paper), pdf_path
+            parsed_paper = ParsedPaper(
+                metadata=metadata,
+                pdf_path=pdf_path,
+                abstract_text=metadata.abstract,
+                warnings=[f"PDF parsing fallback: {error}"],
+            )
+        return parsed_paper, pdf_path

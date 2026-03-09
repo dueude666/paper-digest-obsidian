@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -13,7 +14,10 @@ from paper_digest.models import (
     DailyDigest,
     ImageAsset,
     NoteIndex,
+    PaperFullView,
+    PaperMetadata,
     PaperSummary,
+    ParsedPaper,
     TopicSummary,
     WriteResult,
 )
@@ -174,6 +178,105 @@ class ObsidianWriter:
             skipped=skipped,
         )
 
+    def write_full_paper(
+        self,
+        *,
+        parsed_paper: ParsedPaper,
+        topic: str,
+        pdf_source_path: Path | None = None,
+        vault_override: Path | None = None,
+        dry_run: bool = False,
+        overwrite_strategy: str | None = None,
+    ) -> WriteResult:
+        strategy = overwrite_strategy or self._settings.overwrite_strategy
+        full_view = self.build_full_view(
+            parsed_paper=parsed_paper,
+            topic=topic,
+            pdf_source_path=pdf_source_path,
+            vault_override=vault_override,
+            dry_run=dry_run,
+        )
+        topic_slug = full_view.topic_slug
+        paper_slug = full_view.paper_slug
+        topic_root = self._topic_root(
+            topic_slug=topic_slug, vault_override=vault_override, dry_run=dry_run
+        )
+        note_path = topic_root / self._settings.full_text_dir_name / f"{paper_slug}.md"
+        pdf_asset_path = (
+            topic_root / self._settings.assets_dir_name / paper_slug / f"{paper_slug}.pdf"
+            if pdf_source_path is not None
+            else None
+        )
+        content = self._renderer.render_full_paper(
+            full_view=full_view,
+            frontmatter=self._full_paper_frontmatter(full_view=full_view),
+        )
+        resolved_path, skipped = self._resolve_output_path(
+            note_path,
+            strategy,
+        )
+        relative_path = self._relative_path(
+            resolved_path, vault_override=vault_override, dry_run=dry_run
+        )
+
+        if not dry_run and not skipped:
+            ensure_directory(resolved_path.parent)
+            if pdf_source_path is not None and pdf_asset_path is not None:
+                ensure_directory(pdf_asset_path.parent)
+                if not pdf_asset_path.exists() or strategy == "overwrite":
+                    shutil.copy2(pdf_source_path, pdf_asset_path)
+            resolved_path.write_text(content, encoding="utf-8")
+
+        return WriteResult(
+            path=resolved_path,
+            relative_path=relative_path,
+            content=content,
+            written=not dry_run and not skipped,
+            skipped=skipped,
+        )
+
+    def build_full_view(
+        self,
+        *,
+        parsed_paper: ParsedPaper,
+        topic: str,
+        pdf_source_path: Path | None = None,
+        vault_override: Path | None = None,
+        dry_run: bool = False,
+    ) -> PaperFullView:
+        topic_slug = self.topic_slug(topic)
+        paper_slug = self.paper_slug_from_metadata(parsed_paper.metadata)
+        topic_root = self._topic_root(
+            topic_slug=topic_slug, vault_override=vault_override, dry_run=dry_run
+        )
+        pdf_asset_relative_path: str | None = None
+        pdf_embed_target: str | None = None
+        if pdf_source_path is not None:
+            pdf_asset_path = (
+                topic_root / self._settings.assets_dir_name / paper_slug / f"{paper_slug}.pdf"
+            )
+            pdf_asset_relative_path = self._relative_path(
+                pdf_asset_path,
+                vault_override=vault_override,
+                dry_run=dry_run,
+            )
+            pdf_embed_target = f"../{self._settings.assets_dir_name}/{paper_slug}/{paper_slug}.pdf"
+
+        return PaperFullView(
+            metadata=parsed_paper.metadata,
+            parsed_paper=parsed_paper,
+            topic_name=topic,
+            topic_slug=topic_slug,
+            paper_slug=paper_slug,
+            topic_index_target=f"{self._settings.literature_dir_name}/{topic_slug}/index",
+            summary_note_target=(
+                f"{self._settings.literature_dir_name}/{topic_slug}/"
+                f"{self._settings.papers_dir_name}/{paper_slug}"
+            ),
+            pdf_asset_relative_path=pdf_asset_relative_path,
+            pdf_embed_target=pdf_embed_target,
+        )
+
     def write_daily_digest(
         self,
         *,
@@ -243,10 +346,13 @@ class ObsidianWriter:
         )
 
     def paper_slug(self, summary: PaperSummary) -> str:
-        identifier = summary.metadata.arxiv_id or summary.metadata.source_id
+        return self.paper_slug_from_metadata(summary.metadata)
+
+    def paper_slug_from_metadata(self, metadata: PaperMetadata) -> str:
+        identifier = metadata.arxiv_id or metadata.source_id
         identifier_slug = slugify(identifier, max_length=32)
-        title_slug = slugify(summary.metadata.title, max_length=60)
-        year = summary.metadata.year or "paper"
+        title_slug = slugify(metadata.title, max_length=60)
+        year = metadata.year or "paper"
         return f"{year}-{identifier_slug}-{title_slug}".strip("-")
 
     def topic_slug(self, topic: str) -> str:
@@ -305,6 +411,26 @@ class ObsidianWriter:
             "query": topic_summary.query,
             "paper_count": len(topic_summary.papers),
             "tags": ["文献", "专题索引", f"主题/{topic_slug}"],
+            "created": datetime.now(UTC).isoformat(),
+        }
+
+    def _full_paper_frontmatter(self, *, full_view: PaperFullView) -> dict[str, Any]:
+        metadata = full_view.metadata
+        tags = [
+            "文献",
+            "论文全文",
+            f"主题/{full_view.topic_slug}",
+            metadata.source,
+        ]
+        return {
+            "title": f"{metadata.title} 全文查看",
+            "paper_title": metadata.title,
+            "authors": metadata.authors,
+            "year": metadata.year,
+            "arxiv_id": metadata.arxiv_id,
+            "url": metadata.abs_url,
+            "pdf_path": full_view.pdf_asset_relative_path,
+            "tags": dedupe_preserve_order(tags),
             "created": datetime.now(UTC).isoformat(),
         }
 

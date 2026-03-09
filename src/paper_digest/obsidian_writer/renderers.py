@@ -8,7 +8,7 @@ from typing import Any
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
-from paper_digest.models import DailyDigest, PaperSummary, TopicSummary
+from paper_digest.models import DailyDigest, PaperFullView, PaperSummary, TopicSummary
 
 
 class MarkdownRenderer:
@@ -57,6 +57,18 @@ class MarkdownRenderer:
             topic_summary=topic_summary,
             notes=notes,
             comparison_rows=comparison_rows,
+        )
+
+    def render_full_paper(
+        self,
+        *,
+        full_view: PaperFullView,
+        frontmatter: dict[str, Any],
+    ) -> str:
+        template = self._env.get_template("paper_full_view.md.j2")
+        return template.render(
+            frontmatter=self._dump_frontmatter(frontmatter),
+            full_view=full_view,
         )
 
     def render_daily_digest(

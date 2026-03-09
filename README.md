@@ -2,6 +2,8 @@
 
 `paper-digest-obsidian` is a local Python workflow for searching arXiv papers, downloading PDFs, extracting text, generating structured summaries, and writing Obsidian-friendly Markdown notes into your vault.
 
+Chinese documentation: [README.zh-CN.md](README.zh-CN.md)
+
 The project keeps the useful parts of the `evil-read-arxiv` workflow, but rewrites them as a maintainable local Python application for Codex-style usage:
 
 - layered architecture instead of ad-hoc scripts
@@ -16,6 +18,7 @@ The project keeps the useful parts of the `evil-read-arxiv` workflow, but rewrit
 
 - summarize a single arXiv paper from URL or title
 - summarize a topic with top-N paper notes plus an index page
+- export a full-paper reading note with the original PDF embedded in Obsidian
 - extract paper images into Obsidian assets folders
 - build daily recommendation digests from a research profile
 - scan and link existing Obsidian notes
@@ -113,6 +116,12 @@ SUMMARY_DETAIL_LEVEL=detailed
 .\.venv\Scripts\summarize-topic.exe "autonomous driving detr" --limit 10 --topic 自动驾驶detr
 ```
 
+### Export a full-paper reading note
+
+```powershell
+.\.venv\Scripts\view-paper.exe "https://arxiv.org/abs/1706.03762" --topic transformer
+```
+
 ### Rebuild topic indexes
 
 ```powershell
@@ -148,6 +157,8 @@ By default, notes are written into Chinese-named Obsidian folders:
       index.md
       论文笔记/
         <paper-slug>.md
+      论文全文/
+        <paper-slug>.md
       图片素材/
         <paper-slug>/
 ```
@@ -170,6 +181,14 @@ Each paper note includes:
 - suggested reading path
 - citation
 - image embeds when available
+
+The full-paper note includes:
+
+- a vault-synced local PDF copy
+- inline Obsidian PDF embed
+- extracted abstract
+- extracted sections when parsing succeeds
+- references excerpt and parser warnings when available
 
 The default output style is optimized for readers who want:
 

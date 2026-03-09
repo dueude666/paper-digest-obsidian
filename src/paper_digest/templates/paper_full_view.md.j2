@@ -1,0 +1,51 @@
+{{ frontmatter }}
+
+# {{ full_view.metadata.title }} 全文查看
+
+## 阅读入口
+- 专题入口：[[{{ full_view.topic_index_target }}|{{ full_view.topic_name }} 专题索引]]
+- 摘要笔记：[[{{ full_view.summary_note_target }}|摘要版笔记]]
+- arXiv 页面：[{{ full_view.metadata.abs_url }}]({{ full_view.metadata.abs_url }})
+- PDF 来源：[{{ full_view.metadata.pdf_url }}]({{ full_view.metadata.pdf_url }})
+
+## 原始 PDF
+{% if full_view.pdf_embed_target %}
+![[{{ full_view.pdf_embed_target }}]]
+{% else %}
+- 当前没有可嵌入的本地 PDF。请检查下载是否成功。
+{% endif %}
+
+## 论文摘要
+{{ full_view.parsed_paper.combined_abstract or full_view.metadata.abstract or "未提取到摘要。" }}
+
+## 提取信息
+- 提取方式：{{ full_view.parsed_paper.extraction_method }}
+- 章节数量：{{ full_view.parsed_paper.sections | length }}
+- 正文长度：{{ full_view.parsed_paper.text | length }} 字符
+
+{% if full_view.parsed_paper.sections %}
+## 正文提取
+{% for section in full_view.parsed_paper.sections %}
+### {{ section.heading }}
+{{ section.body }}
+
+{% endfor %}
+{% elif full_view.parsed_paper.text %}
+## 正文提取
+{{ full_view.parsed_paper.text }}
+{% else %}
+## 正文提取
+- 当前没有提取到可读正文。你仍然可以直接查看上面的 PDF。
+{% endif %}
+
+{% if full_view.parsed_paper.references_text %}
+## 参考文献摘录
+{{ full_view.parsed_paper.references_text }}
+{% endif %}
+
+{% if full_view.parsed_paper.warnings %}
+## 提取备注
+{% for warning in full_view.parsed_paper.warnings %}
+- {{ warning }}
+{% endfor %}
+{% endif %}

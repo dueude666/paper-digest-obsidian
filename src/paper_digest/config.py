@@ -23,6 +23,7 @@ class AppSettings(BaseSettings):
     literature_dir_name: str = "文献库"
     daily_dir_name: str = "每日推荐"
     papers_dir_name: str = "论文笔记"
+    full_text_dir_name: str = "论文全文"
     assets_dir_name: str = "图片素材"
     cache_dir: Path = Path("./.cache/paper-digest")
     default_topic: str = "未整理"
@@ -71,6 +72,7 @@ class AppSettings(BaseSettings):
         "literature_dir_name",
         "daily_dir_name",
         "papers_dir_name",
+        "full_text_dir_name",
         "assets_dir_name",
     )
     @classmethod
@@ -80,6 +82,7 @@ class AppSettings(BaseSettings):
             "literature_dir_name": "文献库",
             "daily_dir_name": "每日推荐",
             "papers_dir_name": "论文笔记",
+            "full_text_dir_name": "论文全文",
             "assets_dir_name": "图片素材",
         }
         return value or defaults[info.field_name]
